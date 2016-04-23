@@ -8,15 +8,19 @@ import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import com.google.common.base.Preconditions;
-import com.keenant.tabbed.item.TabItem;
 import com.keenant.tabbed.Tabbed;
+import com.keenant.tabbed.item.PlayerTabItem;
+import com.keenant.tabbed.item.TabItem;
 import com.keenant.tabbed.util.Packets;
 import lombok.Getter;
 import lombok.ToString;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -32,6 +36,7 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     protected final Tabbed tabbed;
     protected final Map<Integer,TabItem> items;
     private final PacketListener packetListener;
+    private final Listener bukkitListener;
     private final int maxItems;
     private final int minColumnWidth;
     private final int maxColumnWidth;
@@ -61,6 +66,7 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
 
         this.items = new HashMap<>();
         this.packetListener = createPacketListener();
+        this.bukkitListener = createBukkitListener();
     }
 
     public int getMaxItems() {
@@ -324,7 +330,7 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     }
 
     private PlayerInfoData getPlayerInfoData(int index, TabItem item) {
-        WrappedGameProfile profile = getGameProfile(index, item.getSkin().getProperty());
+        WrappedGameProfile profile = getGameProfile(index, item);
         return getPlayerInfoData(profile, item.getPing(), item.getText());
     }
 
@@ -340,13 +346,18 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
                     displayName = displayName.substring(0, displayName.length() - 1);
         }
 
-        return new PlayerInfoData(profile, ping, NativeGameMode.NOT_SET, displayName == null ? null : WrappedChatComponent.fromText(displayName));
+        return new PlayerInfoData(profile, ping, NativeGameMode.SURVIVAL, displayName == null ? null : WrappedChatComponent.fromText(displayName));
     }
 
-    private WrappedGameProfile getGameProfile(int index, WrappedSignedProperty skin) {
+    private WrappedGameProfile getGameProfile(int index, TabItem item) {
         String stringIndex = getStringIndex(index);
-        WrappedGameProfile profile = new WrappedGameProfile(UUID.nameUUIDFromBytes(stringIndex.getBytes()), "$" + stringIndex);
-        profile.getProperties().put("textures", skin);
+        UUID uuid = UUID.nameUUIDFromBytes(stringIndex.getBytes());
+
+        if (item instanceof PlayerTabItem)
+            uuid = ((PlayerTabItem) item).getPlayer().getUniqueId();
+
+        WrappedGameProfile profile = new WrappedGameProfile(uuid, "$" + stringIndex);
+        profile.getProperties().put("textures", item.getSkin().getProperty());
         return profile;
     }
 
@@ -356,20 +367,28 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
 
     private void registerListener() {
         ProtocolLibrary.getProtocolManager().addPacketListener(this.packetListener);
+        this.tabbed.getPlugin().getServer().getPluginManager().registerEvents(this.bukkitListener, this.tabbed.getPlugin());
     }
 
     private void unregisterListener() {
         ProtocolLibrary.getProtocolManager().removePacketListener(this.packetListener);
+        HandlerList.unregisterAll(this.bukkitListener);
     }
 
     private PacketAdapter createPacketListener() {
+
         return new PacketAdapter(this.tabbed.getPlugin(), ListenerPriority.NORMAL, PacketType.Play.Server.PLAYER_INFO) {
             public void onPacketSending(PacketEvent event) {
                 if (!event.getPlayer().equals(player))
                     return;
 
                 PacketContainer packet = event.getPacket();
+
+                // sent data
+                PlayerInfoAction action = packet.getPlayerInfoAction().read(0);
                 List<PlayerInfoData> playerData = packet.getPlayerInfoDataLists().read(0);
+
+                // modified
                 List<PlayerInfoData> newData = new ArrayList<>();
 
                 for (PlayerInfoData data : playerData) {
@@ -381,12 +400,27 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
                         PlayerInfoData replaced = new PlayerInfoData(profile, data.getPing(), data.getGameMode(), data.getDisplayName());
                         newData.add(replaced);
                     }
+                    else {
+                        newData.add(data);
+                    }
                 }
 
                 if (newData.size() == 0)
                     event.setCancelled(true);
                 else
                     packet.getPlayerInfoDataLists().write(0, newData);
+            }
+        };
+    }
+
+    private Listener createBukkitListener() {
+        return new Listener() {
+            @EventHandler
+            public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
+                PlayerInfoData data = getPlayerInfoData(WrappedGameProfile.fromPlayer(event.getPlayer()), 0, event.getPlayer().getName());
+                PacketContainer container = Packets.getPacket(PlayerInfoAction.ADD_PLAYER, data);
+                for (Player player : Bukkit.getOnlinePlayers())
+                    Packets.send(player, Collections.singletonList(container));
             }
         };
     }
