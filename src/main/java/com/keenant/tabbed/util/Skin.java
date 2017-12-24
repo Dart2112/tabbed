@@ -12,7 +12,8 @@ import java.util.Objects;
  */
 @ToString
 public class Skin {
-    @Getter private final WrappedSignedProperty property;
+    @Getter
+    private final WrappedSignedProperty property;
 
     public Skin(String value, String signature) {
         this(new WrappedSignedProperty("textures", value, signature));

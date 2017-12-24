@@ -15,9 +15,12 @@ import java.lang.reflect.InvocationTargetException;
  */
 @ToString
 public class TitledTabList implements TabList {
-    @Getter protected final Player player;
-    @Getter private String header;
-    @Getter private String footer;
+    @Getter
+    protected final Player player;
+    @Getter
+    private String header;
+    @Getter
+    private String footer;
 
     public TitledTabList(Player player) {
         this.player = player;

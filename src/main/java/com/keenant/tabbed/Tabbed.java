@@ -16,11 +16,13 @@ import java.util.Map;
 import java.util.logging.Level;
 
 public class Tabbed implements Listener {
-    private static Map<Plugin,Tabbed> instances = new HashMap<>();
-    @Getter @Setter static Level logLevel = Level.WARNING;
-
-    @Getter private final Plugin plugin;
-    private final Map<Player,TabList> tabLists;
+    @Getter
+    @Setter
+    static Level logLevel = Level.WARNING;
+    private static Map<Plugin, Tabbed> instances = new HashMap<>();
+    @Getter
+    private final Plugin plugin;
+    private final Map<Player, TabList> tabLists;
 
     public Tabbed(Plugin plugin) {
         this.plugin = plugin;
@@ -36,6 +38,7 @@ public class Tabbed implements Listener {
 
     /**
      * Gets an instance of Tabbed from a plugin.
+     *
      * @param plugin
      * @return
      */
@@ -50,6 +53,7 @@ public class Tabbed implements Listener {
 
     /**
      * Get the current tab list of the player.
+     *
      * @param player
      * @return The tab list, or null if it wasn't present.
      */
@@ -59,6 +63,7 @@ public class Tabbed implements Listener {
 
     /**
      * Disables the tab list of a player.
+     *
      * @param player
      * @return The tab list removed (or null if it wasn't present).
      */
@@ -72,6 +77,7 @@ public class Tabbed implements Listener {
 
     /**
      * Disables a tab list.
+     *
      * @param tabList
      * @return The tab list removed.
      */
@@ -81,6 +87,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new TitledTabList with the given parameters.
+     *
      * @param player
      * @return
      */
@@ -90,6 +97,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new DefaultTabList.
+     *
      * @param player
      * @return
      */
@@ -99,6 +107,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new CustomTabList with the given parameters.
+     *
      * @param player
      * @return
      */
@@ -108,6 +117,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new CustomTabList with the given parameters.
+     *
      * @param player
      * @param maxItems
      * @return
@@ -118,6 +128,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new CustomTabList with the given parameters.
+     *
      * @param player
      * @param maxItems
      * @param minColumnWidth
@@ -129,6 +140,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new CustomTabList with the given parameters.
+     *
      * @param player
      * @param maxItems
      * @param minColumnWidth
@@ -141,6 +153,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new TableTabList with the given parameters.
+     *
      * @param player
      * @return
      */
@@ -150,6 +163,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new TableTabList with the given parameters.
+     *
      * @param player
      * @param columns
      * @return
@@ -160,6 +174,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new TableTabList with the given parameters.
+     *
      * @param player
      * @param columns
      * @param minColumnWidth
@@ -171,6 +186,7 @@ public class Tabbed implements Listener {
 
     /**
      * Creates a new TableTabList with the given parameters.
+     *
      * @param player
      * @param columns
      * @param minColumnWidth

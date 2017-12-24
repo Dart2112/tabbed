@@ -1,8 +1,8 @@
 package com.keenant.tabbed.tablist;
 
-import com.keenant.tabbed.item.TabItem;
 import com.keenant.tabbed.Tabbed;
 import com.keenant.tabbed.item.PlayerTabItem;
+import com.keenant.tabbed.item.TabItem;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,7 +19,7 @@ import java.util.Map.Entry;
  * An implementation of SimpleTabList that behaves like vanilla Minecraft.
  */
 public final class DefaultTabList extends SimpleTabList implements Listener {
-    private Map<Player,String> names = new HashMap<>();
+    private Map<Player, String> names = new HashMap<>();
 
     private int taskId;
 
@@ -83,7 +83,7 @@ public final class DefaultTabList extends SimpleTabList implements Listener {
     }
 
     private int getTabItemIndex(Player player) {
-        for (Entry<Integer,TabItem> item : this.items.entrySet()) {
+        for (Entry<Integer, TabItem> item : this.items.entrySet()) {
             // items will always be players in this case, cast is safe
             PlayerTabItem tabItem = (PlayerTabItem) item.getValue();
             if (tabItem.getPlayer().equals(player))
@@ -93,7 +93,7 @@ public final class DefaultTabList extends SimpleTabList implements Listener {
     }
 
     private int getInsertLocation(Player player) {
-        for (Entry<Integer,TabItem> item : this.items.entrySet()) {
+        for (Entry<Integer, TabItem> item : this.items.entrySet()) {
             // items will always be players in this case, cast is safe
             PlayerTabItem tabItem = (PlayerTabItem) item.getValue();
 

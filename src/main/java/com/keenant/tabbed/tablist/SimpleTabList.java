@@ -16,7 +16,6 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 
 /**
  * A simple implementation of a custom tab list that supports batch updates.
@@ -26,13 +25,13 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     public static int MAXIMUM_ITEMS = 4 * 20; // client maximum is 4x20 (4 columns, 20 rows)
 
     protected final Tabbed tabbed;
-    protected final Map<Integer,TabItem> items;
+    protected final Map<Integer, TabItem> items;
     private final int maxItems;
     private final int minColumnWidth;
     private final int maxColumnWidth;
-
-    @Getter boolean batchEnabled;
-    private final Map<Integer,TabItem> clientItems;
+    private final Map<Integer, TabItem> clientItems;
+    @Getter
+    boolean batchEnabled;
 
     public SimpleTabList(Tabbed tabbed, Player player, int maxItems, int minColumnWidth, int maxColumnWidth) {
         super(player);
@@ -83,6 +82,7 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     /**
      * Enable batch processing of tab items. Modifications to the tab list
      * will not be sent to the client until {@link #batchUpdate()} is called.
+     *
      * @param batchEnabled
      */
     public void setBatchEnabled(boolean batchEnabled) {
@@ -101,10 +101,10 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
 
     public void add(int index, TabItem item) {
         validateIndex(index);
-        Map<Integer,TabItem> current = new HashMap<>();
+        Map<Integer, TabItem> current = new HashMap<>();
         current.putAll(this.items);
 
-        Map<Integer,TabItem> map = new HashMap<>();
+        Map<Integer, TabItem> map = new HashMap<>();
         for (int i = index; i < getMaxItems(); i++) {
             if (!contains(i))
                 break;
@@ -116,16 +116,16 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     }
 
     public TabItem set(int index, TabItem item) {
-        Map<Integer,TabItem> items = new HashMap<>(1);
+        Map<Integer, TabItem> items = new HashMap<>(1);
         items.put(index, item);
         return set(items).get(index);
     }
 
-    public Map<Integer,TabItem> set(Map<Integer,TabItem> items) {
-        for (Entry<Integer,TabItem> entry : items.entrySet())
+    public Map<Integer, TabItem> set(Map<Integer, TabItem> items) {
+        for (Entry<Integer, TabItem> entry : items.entrySet())
             validateIndex(entry.getKey());
 
-        Map<Integer,TabItem> oldItems = new HashMap<>();
+        Map<Integer, TabItem> oldItems = new HashMap<>();
         oldItems.putAll(this.items);
         update(oldItems, items);
         return oldItems;
@@ -139,9 +139,9 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     }
 
     public <T extends TabItem> T remove(T item) {
-        Iterator<Entry<Integer,TabItem>> iterator = this.items.entrySet().iterator();
+        Iterator<Entry<Integer, TabItem>> iterator = this.items.entrySet().iterator();
         while (iterator.hasNext()) {
-            Entry<Integer,TabItem> entry = iterator.next();
+            Entry<Integer, TabItem> entry = iterator.next();
             if (entry.getValue().equals(item))
                 remove(entry.getKey());
         }
@@ -163,7 +163,7 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     }
 
     public void update(int index) {
-        Map<Integer,TabItem> map = new HashMap<>();
+        Map<Integer, TabItem> map = new HashMap<>();
         map.put(index, get(index));
         update(index, get(index), get(index));
     }
@@ -178,16 +178,16 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
     }
 
     protected void update(int index, TabItem oldItem, TabItem newItem) {
-        Map<Integer,TabItem> oldItems = new HashMap<>(1);
+        Map<Integer, TabItem> oldItems = new HashMap<>(1);
         oldItems.put(index, oldItem);
 
-        Map<Integer,TabItem> newItems = new HashMap<>(1);
+        Map<Integer, TabItem> newItems = new HashMap<>(1);
         newItems.put(index, newItem);
 
         update(oldItems, newItems);
     }
 
-    protected void update(Map<Integer,TabItem> oldItems, Map<Integer,TabItem> items) {
+    protected void update(Map<Integer, TabItem> oldItems, Map<Integer, TabItem> items) {
         update(oldItems, items, false);
     }
 
@@ -206,21 +206,21 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
         return true;
     }
 
-    private Map<Integer,TabItem> putAll(Map<Integer,TabItem> items) {
-        HashMap<Integer,TabItem> result = new HashMap<>(items.size());
-        for (Entry<Integer,TabItem> entry : items.entrySet())
+    private Map<Integer, TabItem> putAll(Map<Integer, TabItem> items) {
+        HashMap<Integer, TabItem> result = new HashMap<>(items.size());
+        for (Entry<Integer, TabItem> entry : items.entrySet())
             if (put(entry.getKey(), entry.getValue()))
                 result.put(entry.getKey(), entry.getValue());
         return result;
     }
 
-    private void update(Map<Integer,TabItem> oldItems, Map<Integer,TabItem> items, boolean isBatch) {
+    private void update(Map<Integer, TabItem> oldItems, Map<Integer, TabItem> items, boolean isBatch) {
         if (this.batchEnabled && !isBatch) {
             this.items.putAll(items);
             return;
         }
 
-        Map<Integer,TabItem> newItems = putAll(items);
+        Map<Integer, TabItem> newItems = putAll(items);
         Packets.send(this.player, getUpdate(oldItems, newItems));
     }
 
@@ -238,27 +238,26 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
             if (oldItem != null)
                 packets.add(Packets.getPacket(PlayerInfoAction.REMOVE_PLAYER, getPlayerInfoData(index, oldItem)));
             packets.add(Packets.getPacket(PlayerInfoAction.ADD_PLAYER, getPlayerInfoData(index, newItem)));
-        }
-        else {
+        } else {
             if (pingChanged)
                 packets.add(Packets.getPacket(PlayerInfoAction.UPDATE_LATENCY, getPlayerInfoData(index, newItem)));
         }
 
         packets.add(Packets.getPacket(PlayerInfoAction.UPDATE_DISPLAY_NAME, getPlayerInfoData(index, newItem)));
 
-       // if (packets.size() > 0) {
-       //     Tabbed.log(Level.INFO, "Packet Update Made:");
-       //     Tabbed.log(Level.INFO, "  @" + index);
-       //     Tabbed.log(Level.INFO, "  (" + skinChanged + "/" + textChanged + "/" + pingChanged + " = " + packets.size() + " packets");
-       // }
+        // if (packets.size() > 0) {
+        //     Tabbed.log(Level.INFO, "Packet Update Made:");
+        //     Tabbed.log(Level.INFO, "  @" + index);
+        //     Tabbed.log(Level.INFO, "  (" + skinChanged + "/" + textChanged + "/" + pingChanged + " = " + packets.size() + " packets");
+        // }
 
         return packets;
     }
 
-    private List<PacketContainer> getUpdate(Map<Integer,TabItem> oldItems, Map<Integer,TabItem> items) {
+    private List<PacketContainer> getUpdate(Map<Integer, TabItem> oldItems, Map<Integer, TabItem> items) {
         List<PacketContainer> all = new ArrayList<>(items.size() * 2);
 
-        for (Entry<Integer,TabItem> entry : items.entrySet())
+        for (Entry<Integer, TabItem> entry : items.entrySet())
             all.addAll(getUpdate(entry.getKey(), oldItems.get(entry.getKey()), entry.getValue()));
 
         List<PlayerInfoData> removePlayer = new ArrayList<>();
