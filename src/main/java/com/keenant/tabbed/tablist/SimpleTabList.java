@@ -50,6 +50,10 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
         return maxItems;
     }
 
+    public int size() {
+        return items.size();
+    }
+
     @Override
     public SimpleTabList enable() {
         super.enable();
