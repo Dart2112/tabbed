@@ -54,6 +54,12 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
         return items.size();
     }
 
+    public void fill(List<TabItem> list) {
+        for (int i : items.keySet()) {
+            items.put(i, list.get(i));
+        }
+    }
+
     @Override
     public SimpleTabList enable() {
         super.enable();
