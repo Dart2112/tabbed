@@ -60,6 +60,10 @@ public class SimpleTabList extends TitledTabList implements CustomTabList {
         }
     }
 
+    public void clear() {
+        items.clear();
+    }
+
     @Override
     public SimpleTabList enable() {
         super.enable();
